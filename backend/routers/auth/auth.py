@@ -109,8 +109,7 @@ async def register(
         db.add(new_user_profile)
         await db.commit()
         await db.refresh(new_user_profile)
-        
-        # Format response
+          # Format response
         user_response = UserResponse(
             id=str(new_user_profile.id),
             user_id=str(new_user_profile.user_id),
@@ -125,6 +124,7 @@ async def register(
             date_of_birth=new_user_profile.date_of_birth,
             timezone=new_user_profile.timezone,
             language=new_user_profile.language,
+            interests=new_user_profile.interests or [],
             preferences=new_user_profile.preferences,
             created_at=new_user_profile.created_at,
             updated_at=new_user_profile.updated_at
@@ -190,8 +190,7 @@ async def login(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User profile not found"
             )
-        
-        # Format response
+          # Format response
         user_response = UserResponse(
             id=str(user_profile.id),
             user_id=str(user_profile.user_id),
@@ -206,6 +205,7 @@ async def login(
             date_of_birth=user_profile.date_of_birth,
             timezone=user_profile.timezone,
             language=user_profile.language,
+            interests=user_profile.interests or [],
             preferences=user_profile.preferences,            created_at=user_profile.created_at,
             updated_at=user_profile.updated_at
         )
@@ -256,7 +256,6 @@ async def get_current_user_profile(
     Get current user's profile
     """
     profile = current_user["profile"]
-    
     return UserResponse(
         id=str(profile.id),
         user_id=str(profile.user_id),
@@ -271,6 +270,7 @@ async def get_current_user_profile(
         date_of_birth=profile.date_of_birth,
         timezone=profile.timezone,
         language=profile.language,
+        interests=profile.interests or [],
         preferences=profile.preferences,
         created_at=profile.created_at,
         updated_at=profile.updated_at

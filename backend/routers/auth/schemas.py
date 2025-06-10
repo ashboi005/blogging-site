@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 # Request schemas
@@ -29,6 +29,7 @@ class UserResponse(BaseModel):
     date_of_birth: Optional[datetime] = None
     timezone: Optional[str] = None
     language: Optional[str] = None
+    interests: List[str] = []
     preferences: Optional[dict] = None
     created_at: datetime
     updated_at: datetime

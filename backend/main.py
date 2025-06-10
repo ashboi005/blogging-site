@@ -8,6 +8,8 @@ import os
 # Import routers
 from routers.auth.auth import router as auth_router
 from routers.users.users import router as users_router
+from routers.blogs.blogs import router as blogs_router
+from routers.blogs.interactions import router as blog_interactions_router
 
 # Get environment configuration
 ENVIRONMENT = os.getenv("ENVIRONMENT", "dev")
@@ -39,6 +41,8 @@ app.add_middleware(
 # Include routers
 app.include_router(auth_router)
 app.include_router(users_router)
+app.include_router(blogs_router)
+app.include_router(blog_interactions_router)
 
 @app.get("/docs", include_in_schema=False)
 async def api_documentation(request: Request):

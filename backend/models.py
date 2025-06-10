@@ -176,10 +176,12 @@ class UserProfile(Base):
     date_of_birth: Mapped[Optional[DateTime]] = mapped_column(DateTime(True))
     timezone: Mapped[Optional[str]] = mapped_column(String(50))
     language: Mapped[Optional[str]] = mapped_column(String(10), default="en")
-    
-    # Custom styling fields for blogging
+      # Custom styling fields for blogging
     custom_font: Mapped[Optional[str]] = mapped_column(String(100))
     custom_colors: Mapped[Optional[str]] = mapped_column(String(255))
+    
+    # User interests (same as blog tags for personalized content)
+    interests: Mapped[List[str]] = mapped_column(JSONB, default=list)
     
     # Preferences (stored as JSON)
     preferences: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
@@ -240,4 +242,169 @@ class UserFollower(Base):
         foreign_keys=[following_id],
         back_populates="follower_relationships"
     )
+
+
+class Blog(Base):
+    """
+    Blog posts table
+    """
+    __tablename__ = "blogs"
+    
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    tags: Mapped[List[str]] = mapped_column(JSONB, default=list)
+    cover_image_url: Mapped[Optional[str]] = mapped_column(String(500))
+    
+    # Blog status and visibility
+    is_published: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_featured: Mapped[bool] = mapped_column(Boolean, default=False)
+    
+    # Timestamps
+    created_at: Mapped[DateTime] = mapped_column(
+        DateTime(True), 
+        server_default=text("CURRENT_TIMESTAMP"),
+        nullable=False
+    )
+    updated_at: Mapped[DateTime] = mapped_column(
+        DateTime(True), 
+        server_default=text("CURRENT_TIMESTAMP"),
+        onupdate=text("CURRENT_TIMESTAMP"),
+        nullable=False
+    )
+    published_at: Mapped[Optional[DateTime]] = mapped_column(DateTime(True))
+    
+    # Indexes for better search performance
+    __table_args__ = (
+        Index("idx_blogs_title", "title"),
+        Index("idx_blogs_tags", "tags"),
+        Index("idx_blogs_published", "is_published"),
+        Index("idx_blogs_created_at", "created_at"),
+    )
+    
+    # Relationships
+    authors: Mapped[List["BlogAuthor"]] = relationship("BlogAuthor", back_populates="blog", cascade="all, delete-orphan")
+    comments: Mapped[List["BlogComment"]] = relationship("BlogComment", back_populates="blog", cascade="all, delete-orphan")
+    likes: Mapped[List["BlogLike"]] = relationship("BlogLike", back_populates="blog", cascade="all, delete-orphan")
+
+
+class BlogAuthor(Base):
+    """
+    Many-to-many relationship table for blog authors
+    Allows multiple authors per blog for co-authored posts
+    """
+    __tablename__ = "blog_authors"
+    __table_args__ = (
+        PrimaryKeyConstraint("blog_id", "user_id", name="blog_authors_pkey"),
+        Index("idx_blog_authors_blog_id", "blog_id"),
+        Index("idx_blog_authors_user_id", "user_id"),
+    )
+    
+    blog_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("blogs.id", ondelete="CASCADE"),
+        nullable=False
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("auth.users.id", ondelete="CASCADE"),
+        nullable=False
+    )
+    is_primary_author: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[DateTime] = mapped_column(
+        DateTime(True),
+        server_default=text("CURRENT_TIMESTAMP"),
+        nullable=False
+    )
+    
+    # Relationships
+    blog: Mapped["Blog"] = relationship("Blog", back_populates="authors")
+    user: Mapped["Users"] = relationship("Users")
+
+
+class BlogLike(Base):
+    """
+    Blog likes table - each user can like a blog only once
+    """
+    __tablename__ = "blog_likes"
+    __table_args__ = (
+        PrimaryKeyConstraint("blog_id", "user_id", name="blog_likes_pkey"),
+        Index("idx_blog_likes_blog_id", "blog_id"),
+        Index("idx_blog_likes_user_id", "user_id"),
+    )
+    
+    blog_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("blogs.id", ondelete="CASCADE"),
+        nullable=False
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("auth.users.id", ondelete="CASCADE"),
+        nullable=False
+    )
+    created_at: Mapped[DateTime] = mapped_column(
+        DateTime(True),
+        server_default=text("CURRENT_TIMESTAMP"),
+        nullable=False
+    )
+    
+    # Relationships
+    blog: Mapped["Blog"] = relationship("Blog", back_populates="likes")
+    user: Mapped["Users"] = relationship("Users")
+
+
+class BlogComment(Base):
+    """
+    Blog comments table with support for replies (one level deep)
+    """
+    __tablename__ = "blog_comments"
+    
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    blog_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("blogs.id", ondelete="CASCADE"),
+        nullable=False
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("auth.users.id", ondelete="CASCADE"),
+        nullable=False
+    )
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    
+    # For replies - parent_comment_id links to main comment (no threading)
+    parent_comment_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("blog_comments.id", ondelete="CASCADE"),
+        nullable=True
+    )
+    
+    # Timestamps
+    created_at: Mapped[DateTime] = mapped_column(
+        DateTime(True),
+        server_default=text("CURRENT_TIMESTAMP"),
+        nullable=False
+    )
+    updated_at: Mapped[DateTime] = mapped_column(
+        DateTime(True),
+        server_default=text("CURRENT_TIMESTAMP"),
+        onupdate=text("CURRENT_TIMESTAMP"),
+        nullable=False
+    )
+    
+    # Indexes
+    __table_args__ = (
+        Index("idx_blog_comments_blog_id", "blog_id"),
+        Index("idx_blog_comments_user_id", "user_id"),
+        Index("idx_blog_comments_parent_id", "parent_comment_id"),
+        Index("idx_blog_comments_created_at", "created_at"),
+    )
+    
+    # Relationships
+    blog: Mapped["Blog"] = relationship("Blog", back_populates="comments")
+    user: Mapped["Users"] = relationship("Users")
+    parent_comment: Mapped[Optional["BlogComment"]] = relationship("BlogComment", remote_side=[id], back_populates="replies")
+    replies: Mapped[List["BlogComment"]] = relationship("BlogComment", back_populates="parent_comment", cascade="all, delete-orphan")
 
