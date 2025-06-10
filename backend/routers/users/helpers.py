@@ -139,6 +139,23 @@ class UserHelpers:
         except Exception as e:
             logger.error(f"Error deleting profile image: {str(e)}")
             return False
+        
+    @staticmethod
+    def validate_interests(interests: List[str]) -> List[str]:
+        """
+        Validate and filter interests against allowed interests
+        """
+        from .schemas import USER_INTERESTS
+        
+        if not interests:
+            return []
+        
+        # Filter to only include valid interests
+        valid_interests = [interest for interest in interests if interest in USER_INTERESTS]
+        
+        # Remove duplicates while preserving order
+        seen = set()
+        return [interest for interest in valid_interests if not (interest in seen or seen.add(interest))]
 
 
 # Create global instance

@@ -14,7 +14,8 @@ from .schemas import (
     FollowingResponse,
     FollowStatsResponse,
     FollowActionResponse,
-    FollowerUser
+    FollowerUser,
+    USER_INTERESTS
 )
 from .helpers import user_helpers
 from typing import Optional, List
@@ -40,8 +41,7 @@ async def get_current_user_profile(
     
     # Debug logging
     logger.info(f"Current user profile data: display_name={profile.display_name}, avatar_url={profile.avatar_url}, username={profile.username}")
-    
-    # Format response with all required fields
+      # Format response with all required fields
     return UserProfileResponse(
         id=str(profile.id),
         user_id=str(profile.user_id),
@@ -57,6 +57,7 @@ async def get_current_user_profile(
         date_of_birth=profile.date_of_birth,
         timezone=profile.timezone,
         language=profile.language,
+        interests=profile.interests or [],
         preferences=profile.preferences,
         created_at=profile.created_at,
         updated_at=profile.updated_at
@@ -90,9 +91,13 @@ async def update_current_user_profile(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Username already taken"
                 )
-        
-        # Update user profile fields
+          # Update user profile fields
         update_data = profile_update.model_dump(exclude_unset=True)
+        
+        # Handle interests validation
+        if "interests" in update_data:
+            update_data["interests"] = user_helpers.validate_interests(update_data["interests"])
+        
         for field, value in update_data.items():
             setattr(profile, field, value)
         
@@ -102,8 +107,7 @@ async def update_current_user_profile(
         # Commit changes
         await db.commit()
         await db.refresh(profile)
-        
-        # Return formatted response
+          # Return formatted response
         return UserProfileResponse(
             id=str(profile.id),
             user_id=str(profile.user_id),
@@ -119,6 +123,7 @@ async def update_current_user_profile(
             date_of_birth=profile.date_of_birth,
             timezone=profile.timezone,
             language=profile.language,
+            interests=profile.interests or [],
             preferences=profile.preferences,
             created_at=profile.created_at,
             updated_at=profile.updated_at
@@ -548,3 +553,9 @@ async def get_follow_stats(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get follow stats"
         )
+
+
+@router.get("/interests", response_model=List[str])
+async def get_available_interests():
+    """Get list of available user interests"""
+    return USER_INTERESTS

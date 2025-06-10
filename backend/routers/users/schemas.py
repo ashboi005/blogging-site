@@ -2,6 +2,27 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
 
+# Available user interests (same as blog tags for personalized content)
+USER_INTERESTS = [
+    "technology",
+    "programming",
+    "web-development",
+    "data-science",
+    "machine-learning",
+    "artificial-intelligence",
+    "life",
+    "fiction",
+    "business",
+    "startup",
+    "marketing",
+    "design",
+    "lifestyle",
+    "health",
+    "travel",
+    "food",
+    "education"
+]
+
 # Request schemas
 class UserProfileUpdate(BaseModel):
     username: Optional[str] = None
@@ -14,6 +35,7 @@ class UserProfileUpdate(BaseModel):
     date_of_birth: Optional[datetime] = None
     timezone: Optional[str] = None
     language: Optional[str] = None
+    interests: Optional[List[str]] = None
 
 class ProfileImageUpload(BaseModel):
     """Response schema for profile image upload"""
@@ -36,6 +58,7 @@ class UserProfileResponse(BaseModel):
     date_of_birth: Optional[datetime] = None
     timezone: Optional[str] = None
     language: Optional[str] = None
+    interests: List[str] = []
     preferences: Optional[dict] = None
     created_at: datetime
     updated_at: datetime
@@ -58,6 +81,7 @@ class UserProfilePublic(BaseModel):
     date_of_birth: Optional[datetime] = None
     timezone: Optional[str] = None
     language: Optional[str] = None
+    interests: List[str] = []
     created_at: datetime
     updated_at: datetime
 
