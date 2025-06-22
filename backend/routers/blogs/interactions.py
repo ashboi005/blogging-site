@@ -23,13 +23,10 @@ import uuid
 
 logger = logging.getLogger(__name__)
 
-# Create router
 router = APIRouter(prefix="/blogs", tags=["Blog Interactions"])
 
-# Security scheme for JWT tokens
 security = HTTPBearer()
 
-# ============== LIKES ENDPOINTS ==============
 
 @router.post("/{blog_id}/like", response_model=LikeActionResponse)
 async def toggle_blog_like(
@@ -42,7 +39,6 @@ async def toggle_blog_like(
         blog_uuid = uuid.UUID(blog_id)
         user_id = current_user["supabase_user"].id
         
-        # Check if blog exists and is published
         blog_result = await db.execute(
             select(Blog.id).where(and_(Blog.id == blog_uuid, Blog.is_published == True))
         )
@@ -52,7 +48,6 @@ async def toggle_blog_like(
                 detail="Blog not found"
             )
         
-        # Check if user already liked this blog
         existing_like = await db.execute(
             select(BlogLike).where(
                 and_(BlogLike.blog_id == blog_uuid, BlogLike.user_id == user_id)
@@ -61,12 +56,10 @@ async def toggle_blog_like(
         like = existing_like.scalar_one_or_none()
         
         if like:
-            # Unlike - remove the like
             await db.delete(like)
             is_liked = False
             message = "Blog unliked successfully"
         else:
-            # Like - add new like
             new_like = BlogLike(blog_id=blog_uuid, user_id=user_id)
             db.add(new_like)
             is_liked = True
@@ -74,7 +67,6 @@ async def toggle_blog_like(
         
         await db.commit()
         
-        # Get updated like count
         like_count_result = await db.execute(
             select(func.count(BlogLike.user_id)).where(BlogLike.blog_id == blog_uuid)
         )
@@ -113,7 +105,6 @@ async def get_blog_like_stats(
         blog_uuid = uuid.UUID(blog_id)
         user_id = current_user["supabase_user"].id
         
-        # Check if blog exists
         blog_result = await db.execute(
             select(Blog.id).where(Blog.id == blog_uuid)
         )
@@ -123,13 +114,11 @@ async def get_blog_like_stats(
                 detail="Blog not found"
             )
         
-        # Get like count
         like_count_result = await db.execute(
             select(func.count(BlogLike.user_id)).where(BlogLike.blog_id == blog_uuid)
         )
         like_count = like_count_result.scalar() or 0
         
-        # Check if current user liked this blog
         user_liked_result = await db.execute(
             select(exists().where(
                 and_(BlogLike.blog_id == blog_uuid, BlogLike.user_id == user_id)
@@ -154,8 +143,6 @@ async def get_blog_like_stats(
             detail="Failed to get like stats"
         )
 
-# ============== COMMENTS ENDPOINTS ==============
-
 @router.post("/{blog_id}/comments", response_model=CommentActionResponse, status_code=status.HTTP_201_CREATED)
 async def create_comment(
     blog_id: str,
@@ -168,7 +155,6 @@ async def create_comment(
         blog_uuid = uuid.UUID(blog_id)
         user_id = current_user["supabase_user"].id
         
-        # Check if blog exists and is published
         blog_result = await db.execute(
             select(Blog.id).where(and_(Blog.id == blog_uuid, Blog.is_published == True))
         )
@@ -178,19 +164,17 @@ async def create_comment(
                 detail="Blog not found"
             )
         
-        # Validate parent comment if it's a reply
         parent_comment_uuid = None
         if comment_data.parent_comment_id:
             try:
                 parent_comment_uuid = uuid.UUID(comment_data.parent_comment_id)
                 
-                # Check if parent comment exists and belongs to the same blog
                 parent_result = await db.execute(
                     select(BlogComment).where(
                         and_(
                             BlogComment.id == parent_comment_uuid,
                             BlogComment.blog_id == blog_uuid,
-                            BlogComment.parent_comment_id.is_(None)  # Only allow replies to main comments
+                            BlogComment.parent_comment_id.is_(None)  
                         )
                     )
                 )
@@ -205,7 +189,6 @@ async def create_comment(
                     detail="Invalid parent comment ID format"
                 )
         
-        # Create comment
         new_comment = BlogComment(
             blog_id=blog_uuid,
             user_id=user_id,
@@ -252,7 +235,6 @@ async def get_blog_comments(
     try:
         blog_uuid = uuid.UUID(blog_id)
         
-        # Check if blog exists
         blog_result = await db.execute(
             select(Blog.id).where(Blog.id == blog_uuid)
         )
@@ -261,8 +243,7 @@ async def get_blog_comments(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Blog not found"
             )
-        
-        # Get main comments (not replies) with user info
+    
         main_comments_result = await db.execute(
             select(
                 BlogComment.id,
@@ -289,7 +270,7 @@ async def get_blog_comments(
         
         main_comments = main_comments_result.all()
         
-        # Get total count of main comments
+
         count_result = await db.execute(
             select(func.count(BlogComment.id))
             .where(
@@ -301,11 +282,9 @@ async def get_blog_comments(
         )
         total_count = count_result.scalar() or 0
         
-        # Build response with replies
         comments_with_replies = []
         
         for comment_row in main_comments:
-            # Get replies for this comment
             replies_result = await db.execute(
                 select(
                     BlogComment.id,
@@ -388,7 +367,6 @@ async def update_comment(
         comment_uuid = uuid.UUID(comment_id)
         user_id = current_user["supabase_user"].id
         
-        # Get comment and check ownership
         result = await db.execute(
             select(BlogComment).where(
                 and_(
@@ -405,7 +383,6 @@ async def update_comment(
                 detail="Comment not found or you don't have permission to edit it"
             )
         
-        # Update comment
         comment.content = comment_update.content
         comment.updated_at = datetime.utcnow()
         
@@ -443,7 +420,6 @@ async def delete_comment(
         comment_uuid = uuid.UUID(comment_id)
         user_id = current_user["supabase_user"].id
         
-        # Get comment and check ownership
         result = await db.execute(
             select(BlogComment).where(
                 and_(
@@ -460,7 +436,6 @@ async def delete_comment(
                 detail="Comment not found or you don't have permission to delete it"
             )
         
-        # Delete comment (this will also delete replies due to cascade)
         await db.delete(comment)
         await db.commit()
         

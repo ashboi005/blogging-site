@@ -1,7 +1,7 @@
 """add_user_followers_table
 
 Revision ID: a0c1e71e27c6
-Revises: da5cf2a783c1
+Revises: 6b341591cc23
 Create Date: 2025-06-10 14:30:10.940498
 
 """
@@ -13,7 +13,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = 'a0c1e71e27c6'
-down_revision: Union[str, None] = 'da5cf2a783c1'
+down_revision: Union[str, None] = '6b341591cc23'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

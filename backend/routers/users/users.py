@@ -38,10 +38,21 @@ async def get_current_user_profile(
     """Get current user's profile information"""
     profile = current_user["profile"]
     supabase_user = current_user["supabase_user"]
-    
-    # Debug logging
+      # Debug logging
     logger.info(f"Current user profile data: display_name={profile.display_name}, avatar_url={profile.avatar_url}, username={profile.username}")
-      # Format response with all required fields
+    
+    # Parse custom_colors from string to list if it's a string
+    custom_colors = profile.custom_colors
+    if isinstance(custom_colors, str):
+        try:
+            import json
+            custom_colors = json.loads(custom_colors)
+        except (json.JSONDecodeError, TypeError):
+            custom_colors = []
+    elif custom_colors is None:
+        custom_colors = []
+    
+    # Format response with all required fields
     return UserProfileResponse(
         id=str(profile.id),
         user_id=str(profile.user_id),
@@ -53,7 +64,7 @@ async def get_current_user_profile(
         bio=profile.bio,
         avatar_url=profile.avatar_url,
         custom_font=profile.custom_font,
-        custom_colors=profile.custom_colors,
+        custom_colors=custom_colors,
         date_of_birth=profile.date_of_birth,
         timezone=profile.timezone,
         language=profile.language,
@@ -93,21 +104,36 @@ async def update_current_user_profile(
                 )
           # Update user profile fields
         update_data = profile_update.model_dump(exclude_unset=True)
-        
-        # Handle interests validation
+          # Handle interests validation
         if "interests" in update_data:
             update_data["interests"] = user_helpers.validate_interests(update_data["interests"])
+        
+        # Handle custom_colors conversion (list to JSON string for database storage)
+        if "custom_colors" in update_data and isinstance(update_data["custom_colors"], list):
+            import json
+            update_data["custom_colors"] = json.dumps(update_data["custom_colors"])
         
         for field, value in update_data.items():
             setattr(profile, field, value)
         
         # Update timestamp
         profile.updated_at = datetime.utcnow()
-        
-        # Commit changes
+          # Commit changes
         await db.commit()
         await db.refresh(profile)
-          # Return formatted response
+        
+        # Parse custom_colors from string to list if it's a string
+        custom_colors = profile.custom_colors
+        if isinstance(custom_colors, str):
+            try:
+                import json
+                custom_colors = json.loads(custom_colors)
+            except (json.JSONDecodeError, TypeError):
+                custom_colors = []
+        elif custom_colors is None:
+            custom_colors = []
+        
+        # Return formatted response
         return UserProfileResponse(
             id=str(profile.id),
             user_id=str(profile.user_id),
@@ -119,7 +145,7 @@ async def update_current_user_profile(
             bio=profile.bio,
             avatar_url=profile.avatar_url,
             custom_font=profile.custom_font,
-            custom_colors=profile.custom_colors,
+            custom_colors=custom_colors,
             date_of_birth=profile.date_of_birth,
             timezone=profile.timezone,
             language=profile.language,

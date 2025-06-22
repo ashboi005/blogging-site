@@ -206,7 +206,8 @@ async def login(
             timezone=user_profile.timezone,
             language=user_profile.language,
             interests=user_profile.interests or [],
-            preferences=user_profile.preferences,            created_at=user_profile.created_at,
+            preferences=user_profile.preferences,            
+            created_at=user_profile.created_at,
             updated_at=user_profile.updated_at
         )
 
@@ -296,14 +297,14 @@ async def forgot_password(
         
         if ENVIRONMENT == "prod":
             # Production frontend URL
-            redirect_url = "https://yourblog.com/reset-password"
+            redirect_url = "http://localhost:3000/auth/reset-password"
         elif ENVIRONMENT == "dev":
             # Development frontend URL
-            redirect_url = "http://localhost:3000/reset-password"
+            redirect_url = "http://localhost:3000/auth/reset-password"
         else:
             # Fallback for testing
-            redirect_url = "http://localhost:3000/reset-password"
-        
+            redirect_url = "http://localhost:3000/auth/reset-password"
+
         # Send password reset email via Supabase
         response = supabase.auth.reset_password_email(
             request_data.email,

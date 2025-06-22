@@ -24,7 +24,7 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_url="/openapi.json",
     servers=[
-        {"url": "https://your-aws-api.execute-api.region.amazonaws.com/Prod", "description": "Production Server"},
+        {"url": "https://tn2jdavoh9.execute-api.ap-south-1.amazonaws.com/Prod", "description": "Production Server"},
         {"url": "http://localhost:8000", "description": "Local Development Server"},
         {"url": "https://your-ngrok-tunnel.ngrok-free.app/", "description": "Ngrok Tunnel"},
     ],
@@ -95,10 +95,10 @@ def home():
         <h1>Welcome to Blogging Site API</h1>
         <hr>
         <ul>
-          <li><a href="/docs">Spotlight API Documentation</a></li>
-          <li><a href="/redoc">Redoc API Documentation</a></li>
-          <li><a href="/apidocs">Swagger API Documentation</a></li>
-          <li><a href="/openapi.json">OpenAPI Specification</a></li>
+          <li><a href="/Prod/docs">Spotlight API Documentation</a></li>
+          <li><a href="/Prod/redoc">Redoc API Documentation</a></li>
+          <li><a href="/Prod/apidocs">Swagger API Documentation</a></li>
+          <li><a href="/Prod/openapi.json">OpenAPI Specification</a></li>
           <hr>
           <li><a href="http://localhost:3000">Frontend Website</a></li>
           <hr>
