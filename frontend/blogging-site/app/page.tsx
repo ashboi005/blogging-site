@@ -66,12 +66,12 @@ export default function Home() {
                   "Strategic Business Insights",
                   "Inspiring Startup Journeys",
                   "Creative Marketing Strategies",
-                  "Stunning creative design",
-                  "Mindful lifestyle",
-                  "Holistic health & wellness",
-                  "Adventurous travel experiences",
-                  "Delicious food & culture",
-                  "Transformative education"
+                  "Stunning Creative Design",
+                  "Mindful Lifestyle",
+                  "Holistic Health & Wellness",
+                  "Adventurous Travel Experiences",
+                  "Delicious Food & Culture",
+                  "Transformative Education"
                 ]}
                 speed={70}
                 className="text-yellow-500"

@@ -76,7 +76,15 @@ def upgrade() -> None:
     )
     op.create_index('idx_blog_likes_blog_id', 'blog_likes', ['blog_id'], unique=False)
     op.create_index('idx_blog_likes_user_id', 'blog_likes', ['user_id'], unique=False)
-    op.add_column('user_profiles', sa.Column('interests', postgresql.JSONB(astext_type=sa.Text()), nullable=False))
+    
+    # Add interests column as nullable first
+    op.add_column('user_profiles', sa.Column('interests', postgresql.JSONB(astext_type=sa.Text()), nullable=True))
+    
+    # Set default empty array for existing users
+    op.execute("UPDATE user_profiles SET interests = '[]'::jsonb WHERE interests IS NULL")
+    
+    # Now make it NOT NULL
+    op.alter_column('user_profiles', 'interests', nullable=False)
     # ### end Alembic commands ###
 
 
