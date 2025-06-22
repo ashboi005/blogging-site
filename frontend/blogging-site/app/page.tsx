@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Cookies from 'js-cookie'
-import Image from "next/image";
 import Navbar from "../components/ui/navbar";
 import { Footer } from "../components/ui/footer";
 import Aurora from "@/components/home/aurora";
@@ -52,7 +51,7 @@ export default function Home() {
           
           <BlurFade delay={0.5} inView>
             <div className="text-2xl sm:text-3xl xl:text-4xl text-center text-white font-medium">
-              <span>{"Write about "}</span>
+              <span>{"Read & Write about "}</span>
               <Typewriter
                 text={[
                   "Cutting-edge Technology",

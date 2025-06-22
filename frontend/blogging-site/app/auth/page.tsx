@@ -32,13 +32,11 @@ export default function AuthPage() {
 
       if (!response.ok) {
         throw new Error(data.detail || 'Login failed')
-      }
-
-      Cookies.set('access_token', data.access_token, { expires: 1, secure: true, sameSite: 'strict' })
+      }      Cookies.set('access_token', data.access_token, { expires: 1, secure: true, sameSite: 'strict' })
       Cookies.set('refresh_token', data.refresh_token, { expires: 7, secure: true, sameSite: 'strict' })
       router.push('/')
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Login failed')
     }
   }
 
@@ -57,12 +55,10 @@ export default function AuthPage() {
 
       if (!response.ok) {
         throw new Error(data.detail || 'Registration failed')
-      }
-
-      setMessage(data.message || 'Registration successful. Please check your email to verify your account.')
+      }      setMessage(data.message || 'Registration successful. Please check your email to verify your account.')
       setIsLogin(true)
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Registration failed')
     }
   }
 
@@ -81,11 +77,9 @@ export default function AuthPage() {
 
       if (!response.ok) {
         throw new Error(data.detail || 'Failed to send password reset email.')
-      }
-
-      setMessage(data.message)
-    } catch (err: any) {
-      setError(err.message)
+      }      setMessage(data.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to send password reset email')
     }
   }
 

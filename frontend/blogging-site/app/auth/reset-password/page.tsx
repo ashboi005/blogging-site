@@ -70,17 +70,15 @@ export default function ResetPasswordPage() {
 
       if (!response.ok) {
         throw new Error(data.detail || 'Failed to reset password.')
-      }
-
-      setMessage(
+      }      setMessage(
         data.message ||
           'Password has been reset successfully. You can now log in with your new password.'
       )
       setTimeout(() => {
         router.push('/auth')
       }, 3000)
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Password reset failed')
     }
   }
 

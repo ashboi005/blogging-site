@@ -136,13 +136,12 @@ export default function Aurora(props: AuroraProps) {
       alpha: true,
       premultipliedAlpha: true,
       antialias: true,
-    });
-    const gl = renderer.gl;
+    });    const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 0);
     gl.enable(gl.BLEND);
-    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-    gl.canvas.style.backgroundColor = "transparent";
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);    gl.canvas.style.backgroundColor = "transparent";
 
+    // eslint-disable-next-line prefer-const
     let program: Program | undefined;
 
     function resize() {
@@ -206,10 +205,9 @@ export default function Aurora(props: AuroraProps) {
       window.removeEventListener("resize", resize);
       if (ctn && gl.canvas.parentNode === ctn) {
         ctn.removeChild(gl.canvas);
-      }
-      gl.getExtension("WEBGL_lose_context")?.loseContext();
+      }      gl.getExtension("WEBGL_lose_context")?.loseContext();
     };
-  }, [amplitude]);
+  }, [amplitude, blend, colorStops]);
 
   return <div ref={ctnDom} className="w-full h-full" />;
 }
